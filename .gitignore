@@ -18,3 +18,9 @@ npm-debug.log*
 .idea/
 .DS_Store
 Thumbs.db
+
+# Prisma Client gerado (npm install / prisma generate)
+backend/src/generated/
+
+# Build incremental do TypeScript
+*.tsbuildinfo
