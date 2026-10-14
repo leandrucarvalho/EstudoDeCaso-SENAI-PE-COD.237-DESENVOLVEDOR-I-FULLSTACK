@@ -9,11 +9,11 @@ export function buildQueryString(params: Record<string, QueryValue>): string {
     const search = new URLSearchParams();
 
     for (const [key, value] of Object.entries(params)) {
-        if (value === undefined ) continue;
+        if (value === undefined) continue;
 
         const text = Array.isArray(value) ? value.join(',') : String(value);
         if (text === '') continue;
-        
+
         search.set(key, text);
     }
 
