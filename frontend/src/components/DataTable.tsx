@@ -1,0 +1,117 @@
+import type { ReactNode } from "react";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+export interface Column<T> {
+  header: string;
+  cell: (row: T) => ReactNode;
+  className?: string;
+}
+
+interface DataTableProps<T> {
+  columns: Column<T>[];
+  rows: T[];
+  getRowKey: (row: T) => string | number;
+  loading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
+  emptyMessage: string;
+  emptyAction?: ReactNode;
+}
+
+const SKELETON_ROWS = 5;
+
+export function DataTable<T>({
+  columns,
+  rows,
+  getRowKey,
+  loading = false,
+  error = null,
+  onRetry,
+  emptyMessage,
+  emptyAction,
+}: DataTableProps<T>) {
+  function renderBody() {
+    if (loading) {
+      return Array.from({ length: SKELETON_ROWS }, (_, index) => (
+        <TableRow key={index}>
+          {columns.map((column) => (
+            <TableCell key={column.header}>
+              <Skeleton className="h-4 w-full" />
+            </TableCell>
+          ))}
+        </TableRow>
+      ));
+    }
+
+    if (error) {
+      return (
+        <TableRow>
+          <TableCell colSpan={columns.length}>
+            <Alert variant="destructive">
+              <AlertCircle />
+              <AlertTitle>Não foi possível carregar</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+            {onRetry && (
+              <Button variant="outline" className="mt-3" onClick={onRetry}>
+                Tentar de novo
+              </Button>
+            )}
+          </TableCell>
+        </TableRow>
+      );
+    }
+
+    if (rows.length === 0) {
+      return (
+        <TableRow>
+          <TableCell
+            colSpan={columns.length}
+            className="py-10 text-center text-muted-foreground"
+          >
+            <p>{emptyMessage}</p>
+            {emptyAction && <div className="mt-3">{emptyAction}</div>}
+          </TableCell>
+        </TableRow>
+      );
+    }
+
+    return rows.map((row) => (
+      <TableRow key={getRowKey(row)}>
+        {columns.map((column) => (
+          <TableCell key={column.header} className={column.className}>
+            {column.cell(row)}
+          </TableCell>
+        ))}
+      </TableRow>
+    ));
+  }
+
+  return (
+    <div className="rounded-xl border bg-card">
+      <Table aria-busy={loading}>
+        <TableHeader className="bg-muted-subtle">
+          <TableRow>
+            {columns.map((column) => (
+              <TableHead key={column.header} className={column.className}>
+                {column.header}
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>{renderBody()}</TableBody>
+      </Table>
+    </div>
+  );
+}
