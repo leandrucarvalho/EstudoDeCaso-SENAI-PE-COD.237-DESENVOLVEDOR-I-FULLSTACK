@@ -1,14 +1,7 @@
 import { Badge } from "@/components/ui/badge";
+import { POSITION_LABELS } from "@/lib/player-labels";
 import type { Position } from "@/types/player";
 
-const LABELS: Record<Position, string> = {
-  GOL: "Goleiro",
-  ZAG: "Zagueiro",
-  LAT: "Lateral",
-  MEI: "Meia",
-  ATA: "Atacante",
-};
-
 export function PositionBadge({ position }: { position: Position }) {
-  return <Badge variant="secondary">{LABELS[position]}</Badge>;
+  return <Badge variant="secondary">{POSITION_LABELS[position]}</Badge>;
 }
