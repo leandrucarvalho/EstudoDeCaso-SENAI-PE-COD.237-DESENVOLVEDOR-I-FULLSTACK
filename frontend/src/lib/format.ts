@@ -66,3 +66,13 @@ export function formatDateTime(iso: Maybe<string>): string {
 export function toApiDateTime(date: string, time: string): string {
   return `${date}T${time}-03:00`;
 }
+
+export function getInitials(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return EMPTY;
+
+  const first = words[0].charAt(0);
+  const last = words.length > 1 ? words[words.length - 1].charAt(0) : "";
+
+  return `${first}${last}`.toLocaleUpperCase("pt-BR");
+}

@@ -1,83 +1,68 @@
+import { Users } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
-import { ConditionBadge } from "@/components/ConditionBadge";
-import { DataTable, type Column } from "@/components/DataTable";
+import { DataTable } from "@/components/DataTable";
 import { PageHeader } from "@/components/PageHeader";
 import { Pagination } from "@/components/Pagination";
+import { PlayersListHeader } from "@/components/PlayersListHeader";
 import { PlayersToolbar } from "@/components/PlayersToolbar";
-import { PositionBadge } from "@/components/PositionBadge";
+import { buildPlayerColumns } from "@/components/players-table-columns";
 import { Button } from "@/components/ui/button";
 import { useAsync } from "@/hooks/useAsync";
 import { useDebounce } from "@/hooks/useDebounce";
-import { formatMoney } from "@/lib/format";
+import { usePlayerCounts } from "@/hooks/usePlayerCounts";
 import {
+  ALL,
   DEFAULT_VIEW,
+  PAGE_SIZE,
   hasActiveFilters,
   toFilters,
   type PlayersView,
 } from "@/lib/players-view";
+import { listClubs } from "@/services/clubs";
 import { listPlayers } from "@/services/players";
-import type { Player } from "@/types/player";
-
-const columns: Column<Player>[] = [
-  {
-    header: "Jogador",
-    cell: (player) => player.name,
-    className: "font-medium",
-  },
-  {
-    header: "Posição",
-    cell: (player) => <PositionBadge position={player.position} />,
-  },
-  {
-    header: "Condição",
-    cell: (player) => <ConditionBadge condition={player.condition} />,
-  },
-  {
-    header: "Idade",
-    cell: (player) => player.age,
-    className: "text-right tabular-nums",
-  },
-  {
-    header: "Overall",
-    cell: (player) => player.overall,
-    className: "text-right tabular-nums",
-  },
-  {
-    header: "Valor de mercado",
-    cell: (player) => formatMoney(player.market_value),
-    className: "text-right tabular-nums",
-  },
-  {
-    header: "Clube",
-    cell: (player) =>
-      player.club_id === null ? "Livre" : `Clube ${player.club_id}`,
-  },
-];
 
 export function PlayersPage() {
   const [view, setView] = useState<PlayersView>(DEFAULT_VIEW);
-  const debouncedSearch = useDebounce(view.search);
+  const debouncedView = useDebounce(view);
 
-  const { position, condition, scope, sort, page } = view;
-  const filters = useMemo(
-    () =>
-      toFilters({
-        search: debouncedSearch,
-        position,
-        condition,
-        scope,
-        sort,
-        page,
-      }),
-    [debouncedSearch, position, condition, scope, sort, page],
-  );
-
+  const filters = useMemo(() => toFilters(debouncedView), [debouncedView]);
   const fetchPlayers = useCallback(() => listPlayers(filters), [filters]);
   const { data, error, loading, reload } = useAsync(fetchPlayers);
 
+  // Totais das abas: mesmos filtros, sem aba, ordenação e página.
+  const { search, position, condition, club, minAge, maxAge, minValue, maxValue } =
+    debouncedView;
+  const countFilters = useMemo(
+    () =>
+      toFilters({
+        ...DEFAULT_VIEW,
+        search,
+        position,
+        condition,
+        club,
+        minAge,
+        maxAge,
+        minValue,
+        maxValue,
+      }),
+    [search, position, condition, club, minAge, maxAge, minValue, maxValue],
+  );
+  const { data: counts } = usePlayerCounts(countFilters);
+
+  // `listClubs` é uma função do módulo (referência estável).
+  const { data: clubs } = useAsync(listClubs);
+  const columns = useMemo(() => {
+    const byId = new Map((clubs ?? []).map((item) => [item.id, item] as const));
+    return buildPlayerColumns(byId);
+  }, [clubs]);
+
   // Qualquer mudança de filtro volta para a página 1.
+  // "Livres" não combina com clube (a API recusa): entrar em "Livres" limpa o clube.
   function change(patch: Partial<PlayersView>) {
-    setView((current) => ({ ...current, page: 1, ...patch }));
+    setView((current) => {
+      const next = { ...current, page: 1, ...patch };
+      return next.scope === "free" ? { ...next, club: ALL } : next;
+    });
   }
 
   const filtered = hasActiveFilters(view);
@@ -85,12 +70,14 @@ export function PlayersPage() {
   return (
     <>
       <PageHeader
+        icon={Users}
         title="Jogadores"
         description="Cadastre jogadores, acompanhe os indicadores e compre os que estão livres."
       />
 
       <PlayersToolbar
         view={view}
+        clubs={clubs ?? []}
         onChange={change}
         onClear={() => setView(DEFAULT_VIEW)}
       />
@@ -102,6 +89,9 @@ export function PlayersPage() {
         loading={loading}
         error={error}
         onRetry={reload}
+        toolbar={
+          <PlayersListHeader view={view} counts={counts} onChange={change} />
+        }
         emptyMessage={
           filtered
             ? "Nenhum jogador encontrado com esses filtros."
@@ -114,19 +104,27 @@ export function PlayersPage() {
             </Button>
           ) : undefined
         }
+        footer={
+          data && data.meta.total_items > 0 ? (
+            <Pagination
+              page={data.meta.page}
+              totalPages={data.meta.total_pages}
+              totalItems={data.meta.total_items}
+              limit={PAGE_SIZE}
+              itemName={{ singular: "jogador", plural: "jogadores" }}
+              disabled={loading}
+              onChange={(next) =>
+                setView((current) => ({ ...current, page: next }))
+              }
+            />
+          ) : undefined
+        }
       />
 
-      {data && (
-        <Pagination
-          page={data.meta.page}
-          totalPages={data.meta.total_pages}
-          totalItems={data.meta.total_items}
-          disabled={loading}
-          onChange={(next) =>
-            setView((current) => ({ ...current, page: next }))
-          }
-        />
-      )}
+      <p className="mt-4 text-sm text-muted-foreground">
+        Overall e valor de mercado são calculados a cada consulta. A busca
+        ignora maiúsculas, minúsculas e acentos.
+      </p>
     </>
   );
 }

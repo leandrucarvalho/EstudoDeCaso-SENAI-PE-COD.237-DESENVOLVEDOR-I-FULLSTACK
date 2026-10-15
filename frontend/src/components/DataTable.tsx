@@ -27,6 +27,8 @@ interface DataTableProps<T> {
   onRetry?: () => void;
   emptyMessage: string;
   emptyAction?: ReactNode;
+  toolbar?: ReactNode;
+  footer?: ReactNode;
 }
 
 const SKELETON_ROWS = 5;
@@ -40,6 +42,8 @@ export function DataTable<T>({
   onRetry,
   emptyMessage,
   emptyAction,
+  toolbar,
+  footer,
 }: DataTableProps<T>) {
   function renderBody() {
     if (loading) {
@@ -99,7 +103,8 @@ export function DataTable<T>({
   }
 
   return (
-    <div className="rounded-xl border bg-card">
+    <div className="overflow-hidden rounded-xl border bg-card">
+      {toolbar && <div className="border-b p-3">{toolbar}</div>}
       <Table aria-busy={loading}>
         <TableHeader className="bg-muted-subtle">
           <TableRow>
@@ -112,6 +117,7 @@ export function DataTable<T>({
         </TableHeader>
         <TableBody>{renderBody()}</TableBody>
       </Table>
+      {footer && <div className="border-t p-3">{footer}</div>}
     </div>
   );
 }
