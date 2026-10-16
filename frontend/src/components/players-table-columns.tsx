@@ -2,13 +2,20 @@ import { AgilityBar } from "@/components/AgilityBar";
 import { ClubCell } from "@/components/ClubCell";
 import { ConditionBadge } from "@/components/ConditionBadge";
 import type { Column } from "@/components/DataTable";
+import {
+  PlayerActionsMenu,
+  type PlayerAction,
+} from "@/components/PlayerActionsMenu";
 import { PlayerCell } from "@/components/PlayerCell";
 import { PositionBadge } from "@/components/PositionBadge";
 import { formatMoney } from "@/lib/format";
 import type { Club } from "@/types/club";
 import type { Player } from "@/types/player";
 
-export function buildPlayerColumns(clubs: Map<number, Club>): Column<Player>[] {
+export function buildPlayerColumns(
+  clubs: Map<number, Club>,
+  onAction: (action: PlayerAction, player: Player) => void,
+): Column<Player>[] {
   return [
     { header: "Jogador", cell: (player) => <PlayerCell player={player} /> },
     {
@@ -47,6 +54,14 @@ export function buildPlayerColumns(clubs: Map<number, Club>): Column<Player>[] {
     {
       header: "Clube",
       cell: (player) => <ClubCell player={player} clubs={clubs} />,
+    },
+    {
+      header: "Ações",
+      srOnlyHeader: true,
+      cell: (player) => (
+        <PlayerActionsMenu player={player} onAction={onAction} />
+      ),
+      className: "w-12 text-right",
     },
   ];
 }

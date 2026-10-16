@@ -1,7 +1,13 @@
+import { Plus, Users } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { DataTable } from "@/components/DataTable";
+import { DeletePlayerDialog } from "@/components/DeletePlayerDialog";
 import { PageHeader } from "@/components/PageHeader";
 import { Pagination } from "@/components/Pagination";
+import { PlayerConditionDialog } from "@/components/PlayerConditionDialog";
+import { PlayerDetailsDialog } from "@/components/PlayerDetailsDialog";
+import { PlayerFormDialog } from "@/components/PlayerFormDialog";
+import type { PlayerAction } from "@/components/PlayerActionsMenu";
 import { PlayersListHeader } from "@/components/PlayersListHeader";
 import { PlayersToolbar } from "@/components/PlayersToolbar";
 import { buildPlayerColumns } from "@/components/players-table-columns";
@@ -19,12 +25,17 @@ import {
 } from "@/lib/players-view";
 import { listClubs } from "@/services/clubs";
 import { listPlayers } from "@/services/players";
-import { Plus, Users } from "lucide-react";
-import { PlayerFormDialog } from "@/components/PlayerFormDialog";
+import type { Player } from "@/types/player";
+
+interface PlayerDialog {
+  action: PlayerAction;
+  player: Player;
+}
 
 export function PlayersPage() {
   const [view, setView] = useState<PlayersView>(DEFAULT_VIEW);
   const [creating, setCreating] = useState(false);
+  const [dialog, setDialog] = useState<PlayerDialog | null>(null);
   const debouncedView = useDebounce(view);
 
   const filters = useMemo(() => toFilters(debouncedView), [debouncedView]);
@@ -61,10 +72,23 @@ export function PlayersPage() {
 
   // `listClubs` é uma função do módulo (referência estável).
   const { data: clubs } = useAsync(listClubs);
-  const columns = useMemo(() => {
-    const byId = new Map((clubs ?? []).map((item) => [item.id, item] as const));
-    return buildPlayerColumns(byId);
-  }, [clubs]);
+  const clubsById = useMemo(
+    () => new Map((clubs ?? []).map((item) => [item.id, item] as const)),
+    [clubs],
+  );
+  const columns = useMemo(
+    () =>
+      buildPlayerColumns(clubsById, (action, player) =>
+        setDialog({ action, player }),
+      ),
+    [clubsById],
+  );
+
+  // Depois de salvar ou excluir, a lista e os totais das abas são buscados de novo.
+  function refresh() {
+    reload();
+    reloadCounts();
+  }
 
   // Qualquer mudança de filtro volta para a página 1.
   // "Livres" não combina com clube (a API recusa): entrar em "Livres" limpa o clube.
@@ -141,13 +165,47 @@ export function PlayersPage() {
         Overall e valor de mercado são calculados a cada consulta. A busca
         ignora maiúsculas, minúsculas e acentos.
       </p>
+
       {creating && (
         <PlayerFormDialog
           onClose={() => setCreating(false)}
-          onSaved={() => {
-            reload();
-            reloadCounts();
-          }}
+          onSaved={refresh}
+        />
+      )}
+
+      {dialog?.action === "details" && (
+        <PlayerDetailsDialog
+          player={dialog.player}
+          club={
+            dialog.player.club_id === null
+              ? undefined
+              : clubsById.get(dialog.player.club_id)
+          }
+          onClose={() => setDialog(null)}
+        />
+      )}
+
+      {dialog?.action === "edit" && (
+        <PlayerFormDialog
+          player={dialog.player}
+          onClose={() => setDialog(null)}
+          onSaved={refresh}
+        />
+      )}
+
+      {dialog?.action === "condition" && (
+        <PlayerConditionDialog
+          player={dialog.player}
+          onClose={() => setDialog(null)}
+          onSaved={refresh}
+        />
+      )}
+
+      {dialog?.action === "delete" && (
+        <DeletePlayerDialog
+          player={dialog.player}
+          onClose={() => setDialog(null)}
+          onDeleted={refresh}
         />
       )}
     </>
