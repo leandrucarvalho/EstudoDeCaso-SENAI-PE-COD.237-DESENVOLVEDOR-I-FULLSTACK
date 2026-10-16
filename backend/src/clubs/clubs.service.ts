@@ -32,8 +32,11 @@ export class ClubsService {
         throw new ConflictError(`A liga aceita no máximo ${MAX_CLUBS} clubes.`);
       }
       const nameKey = normalizeSpaces(input.name).toLowerCase();
-      if (await this.clubs.existsWithNameKey(nameKey, db)) {
-        throw new ConflictError('Já existe um clube com esse nome.');
+      const sameName = await this.clubs.findByNameKey(nameKey, db);
+      if (sameName) {
+        throw new ConflictError(
+          `Já existe um clube com o nome “${sameName.name}”.`,
+        );
       }
       if (await this.clubs.existsWithAcronym(input.acronym, db)) {
         throw new ConflictError('Já existe um clube com essa sigla.');

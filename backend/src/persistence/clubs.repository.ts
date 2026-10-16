@@ -33,11 +33,11 @@ export class ClubsRepository {
     return db.club.count();
   }
 
-  async existsWithNameKey(
+  findByNameKey(
     nameKey: string,
     db: DbClient = this.prisma,
-  ): Promise<boolean> {
-    return (await db.club.count({ where: { nameKey } })) > 0;
+  ): Promise<Club | null> {
+    return db.club.findUnique({ where: { nameKey } });
   }
 
   async existsWithAcronym(
