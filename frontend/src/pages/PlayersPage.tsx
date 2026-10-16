@@ -1,4 +1,3 @@
-import { Users } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { DataTable } from "@/components/DataTable";
 import { PageHeader } from "@/components/PageHeader";
@@ -20,9 +19,12 @@ import {
 } from "@/lib/players-view";
 import { listClubs } from "@/services/clubs";
 import { listPlayers } from "@/services/players";
+import { Plus, Users } from "lucide-react";
+import { PlayerFormDialog } from "@/components/PlayerFormDialog";
 
 export function PlayersPage() {
   const [view, setView] = useState<PlayersView>(DEFAULT_VIEW);
+  const [creating, setCreating] = useState(false);
   const debouncedView = useDebounce(view);
 
   const filters = useMemo(() => toFilters(debouncedView), [debouncedView]);
@@ -30,8 +32,16 @@ export function PlayersPage() {
   const { data, error, loading, reload } = useAsync(fetchPlayers);
 
   // Totais das abas: mesmos filtros, sem aba, ordenação e página.
-  const { search, position, condition, club, minAge, maxAge, minValue, maxValue } =
-    debouncedView;
+  const {
+    search,
+    position,
+    condition,
+    club,
+    minAge,
+    maxAge,
+    minValue,
+    maxValue,
+  } = debouncedView;
   const countFilters = useMemo(
     () =>
       toFilters({
@@ -47,7 +57,7 @@ export function PlayersPage() {
       }),
     [search, position, condition, club, minAge, maxAge, minValue, maxValue],
   );
-  const { data: counts } = usePlayerCounts(countFilters);
+  const { data: counts, reload: reloadCounts } = usePlayerCounts(countFilters);
 
   // `listClubs` é uma função do módulo (referência estável).
   const { data: clubs } = useAsync(listClubs);
@@ -73,6 +83,12 @@ export function PlayersPage() {
         icon={Users}
         title="Jogadores"
         description="Cadastre jogadores, acompanhe os indicadores e compre os que estão livres."
+        action={
+          <Button onClick={() => setCreating(true)}>
+            <Plus aria-hidden />
+            Novo jogador
+          </Button>
+        }
       />
 
       <PlayersToolbar
@@ -125,6 +141,15 @@ export function PlayersPage() {
         Overall e valor de mercado são calculados a cada consulta. A busca
         ignora maiúsculas, minúsculas e acentos.
       </p>
+      {creating && (
+        <PlayerFormDialog
+          onClose={() => setCreating(false)}
+          onSaved={() => {
+            reload();
+            reloadCounts();
+          }}
+        />
+      )}
     </>
   );
 }
