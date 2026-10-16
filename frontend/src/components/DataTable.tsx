@@ -16,6 +16,7 @@ export interface Column<T> {
   header: string;
   cell: (row: T) => ReactNode;
   className?: string;
+  srOnlyHeader?: boolean;
 }
 
 interface DataTableProps<T> {
@@ -110,7 +111,11 @@ export function DataTable<T>({
           <TableRow>
             {columns.map((column) => (
               <TableHead key={column.header} className={column.className}>
-                {column.header}
+                {column.srOnlyHeader ? (
+                  <span className="sr-only">{column.header}</span>
+                ) : (
+                  column.header
+                )}
               </TableHead>
             ))}
           </TableRow>
