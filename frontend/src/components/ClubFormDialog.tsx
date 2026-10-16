@@ -1,8 +1,8 @@
-import { Shield, Wallet } from "lucide-react";
+import { AlertCircle, Shield, Wallet } from "lucide-react";
 import { useMemo, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { FormField } from "@/components/FormField";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { formatMoney } from "@/lib/format";
 import { ApiError } from "@/lib/http";
 import {
   EMPTY_CLUB_FORM,
@@ -66,8 +67,8 @@ export function ClubFormDialog({ onClose, onSaved }: ClubFormDialogProps) {
 
     try {
       const saved = await createClub(toCreateClubInput(values));
-      toast.success(`${saved.name} foi criado.`, {
-        description: "Começa com 300,00 em caixa e sem jogadores.",
+      toast.success("Clube criado", {
+        description: `${saved.name} (${saved.acronym}) começa com ${formatMoney(saved.cash)} em caixa.`,
       });
       onSaved(saved);
       onClose();
@@ -110,6 +111,8 @@ export function ClubFormDialog({ onClose, onSaved }: ClubFormDialogProps) {
 
           {apiError && (
             <Alert variant="destructive">
+              <AlertCircle />
+              <AlertTitle>Não foi possível criar o clube</AlertTitle>
               <AlertDescription>{apiError}</AlertDescription>
             </Alert>
           )}
