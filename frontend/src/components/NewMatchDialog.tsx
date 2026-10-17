@@ -74,7 +74,7 @@ export function NewMatchDialog({
   const [failure, setFailure] = useState<string | null>(null);
 
   const sameClub = home !== "" && home === away;
-  const ready = home !== "" && away !== "" && !sameClub;
+  const ready = home !== "" && away !== "" && !sameClub && clubs.length >= 2;
 
   function close() {
     if (!submitting) onClose();
@@ -149,7 +149,11 @@ export function NewMatchDialog({
             label="Visitante"
             hint="Precisa ser um clube diferente do mandante."
             error={
-              sameClub ? "Escolha um clube diferente do mandante." : undefined
+              sameClub
+                ? "Escolha um clube diferente do mandante."
+                : clubs.length < 2
+                  ? "A liga precisa de pelo menos dois clubes."
+                  : undefined
             }
           >
             <ClubSelect
