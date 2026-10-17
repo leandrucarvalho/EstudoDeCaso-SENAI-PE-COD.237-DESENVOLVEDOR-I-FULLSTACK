@@ -353,10 +353,13 @@ export function LineupEditor({
           )}
 
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="max-w-md text-sm text-muted-foreground">
-              A escalação vale até ser trocada. Titular vendido ou que fica
-              doente sai dela, e o clube só volta a jogar depois de escalar de
-              novo.
+            <p
+              role={complete ? undefined : "status"}
+              className="max-w-md text-sm text-muted-foreground"
+            >
+              {complete
+                ? "A escalação vale até ser trocada. Titular vendido ou que fica doente sai dela, e o clube só volta a jogar depois de escalar de novo."
+                : `Escolha os ${slots.length} titulares para salvar: faltam ${slots.length - starters.length}.`}
             </p>
             <div className="flex gap-2">
               <Button
