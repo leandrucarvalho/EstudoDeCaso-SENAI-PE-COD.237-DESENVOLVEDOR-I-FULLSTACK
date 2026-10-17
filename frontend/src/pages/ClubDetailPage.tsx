@@ -105,7 +105,7 @@ export function ClubDetailPage() {
     return (
       <div className="space-y-3">
         <Alert variant="destructive">
-          <AlertTitle>Não foi possível carregar</AlertTitle>
+          <AlertTitle>Não foi possível carregar o elenco</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
         <Button variant="outline" onClick={reload}>
@@ -217,7 +217,13 @@ export function ClubDetailPage() {
                 </p>
               </div>
             }
-            emptyMessage="Este clube ainda não tem jogadores."
+            emptyTitle="O clube ainda não tem jogadores"
+            emptyMessage="Compre jogadores livres para formar o elenco."
+            emptyAction={
+              <Button variant="outline" asChild>
+                <Link to="/jogadores">Comprar jogadores</Link>
+              </Button>
+            }
           />
           <p className="mt-4 text-sm text-muted-foreground">
             Valor de mercado, dias restantes e % de multa são calculados para

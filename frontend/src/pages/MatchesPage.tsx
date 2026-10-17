@@ -106,10 +106,27 @@ export function MatchesPage() {
             </Select>
           </div>
         }
+        errorTitle="Não foi possível carregar as partidas"
+        emptyTitle={
+          club === ALL_CLUBS
+            ? "Nenhuma partida jogada"
+            : "Nenhuma partida deste clube"
+        }
         emptyMessage={
           club === ALL_CLUBS
-            ? "Nenhuma partida jogada ainda. Escale 5 titulares em dois clubes e clique em Nova partida."
+            ? "Escale os titulares de dois clubes e jogue a primeira partida."
             : "Este clube ainda não jogou partidas."
+        }
+        emptyAction={
+          club === ALL_CLUBS ? (
+            <Button
+              variant="outline"
+              disabled={!clubs}
+              onClick={() => setCreating(true)}
+            >
+              Nova partida
+            </Button>
+          ) : undefined
         }
         footer={
           matches && matches.length > 0 ? (

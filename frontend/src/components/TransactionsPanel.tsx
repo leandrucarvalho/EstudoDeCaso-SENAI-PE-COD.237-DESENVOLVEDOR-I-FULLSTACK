@@ -218,17 +218,16 @@ export function TransactionsPanel({ clubId }: { clubId: number }) {
               loading={loading}
               error={error}
               onRetry={reload}
+              errorTitle="Não foi possível carregar o histórico"
+              emptyTitle={
+                filtered
+                  ? "Nenhuma transação com esses filtros"
+                  : "Nenhuma compra ou venda"
+              }
               emptyMessage={
                 filtered
-                  ? "Nenhuma transação com esses filtros."
-                  : "Nenhuma transação ainda. As compras e vendas do clube aparecem aqui."
-              }
-              emptyAction={
-                filtered ? (
-                  <Button variant="outline" onClick={clearFilters}>
-                    Limpar filtros
-                  </Button>
-                ) : undefined
+                  ? "Tente outros filtros ou limpe os filtros atuais."
+                  : "As compras e vendas do clube aparecem aqui, com os totais."
               }
             />
             {page && (

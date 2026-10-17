@@ -138,17 +138,25 @@ export function PlayersPage() {
         toolbar={
           <PlayersListHeader view={view} counts={counts} onChange={change} />
         }
+        errorTitle="Não foi possível carregar os jogadores"
+        emptyTitle={
+          filtered ? "Nenhum jogador encontrado" : "Nenhum jogador cadastrado"
+        }
         emptyMessage={
           filtered
-            ? "Nenhum jogador encontrado com esses filtros."
-            : "Nenhum jogador cadastrado ainda."
+            ? "Nenhum jogador com esses filtros."
+            : "Com o banco recém-criado, a lista começa vazia."
         }
         emptyAction={
           filtered ? (
             <Button variant="outline" onClick={() => setView(DEFAULT_VIEW)}>
               Limpar filtros
             </Button>
-          ) : undefined
+          ) : (
+            <Button variant="outline" onClick={() => setCreating(true)}>
+              Novo jogador
+            </Button>
+          )
         }
         footer={
           data && data.meta.total_items > 0 ? (

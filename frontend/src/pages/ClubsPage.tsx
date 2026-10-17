@@ -45,10 +45,12 @@ export function ClubsPage() {
             onSortChange={setSort}
           />
         }
-        emptyMessage="Nenhum clube criado ainda."
+        errorTitle="Não foi possível carregar os clubes"
+        emptyTitle="Nenhum clube cadastrado"
+        emptyMessage="Crie o primeiro clube para começar."
         emptyAction={
           <Button variant="outline" onClick={() => setCreating(true)}>
-            Criar o primeiro clube
+            Novo clube
           </Button>
         }
       />
