@@ -1,19 +1,23 @@
 import {
   ArrowLeft,
   Banknote,
+  History,
   Landmark,
+  ClipboardList,
+  ShoppingCart,
   SearchX,
   Shirt,
   Wallet,
-  ShoppingCart,
-  History,
 } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { ClubAvatar } from "@/components/ClubAvatar";
 import { DataTable } from "@/components/DataTable";
+import { SellPlayerDialog } from "@/components/SellPlayerDialog";
 import { buildSquadColumns } from "@/components/squad-table-columns";
+import { LineupPanel } from "@/components/LineupPanel";
 import { StatCard } from "@/components/StatCard";
+import { TransactionsPanel } from "@/components/TransactionsPanel";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,9 +27,7 @@ import { useAsync } from "@/hooks/useAsync";
 import { formatMoney } from "@/lib/format";
 import { ApiError } from "@/lib/http";
 import { getClub } from "@/services/clubs";
-import { SellPlayerDialog } from "@/components/SellPlayerDialog";
 import type { SquadPlayer } from "@/types/club";
-import { TransactionsPanel } from "@/components/TransactionsPanel";
 
 // Limite do elenco (RN12), só para mostrar "6 de 12"; quem recusa o 13º é a API.
 const MAX_SQUAD_SIZE = 12;
@@ -66,10 +68,12 @@ export function ClubDetailPage() {
     }
   }, [id, validId]);
   const { data: club, error, loading, reload } = useAsync(fetchClub);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const aba = searchParams.get("aba");
+  const tab =
+    aba === "historico" ? "history" : aba === "escalacao" ? "lineup" : "squad";
   const [selling, setSelling] = useState<SquadPlayer | null>(null);
   const columns = useMemo(() => buildSquadColumns(setSelling), []);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const tab = searchParams.get("aba") === "historico" ? "history" : "squad";
 
   if (loading) {
     return (
@@ -161,7 +165,13 @@ export function ClubDetailPage() {
       <Tabs
         value={tab}
         onValueChange={(value) =>
-          setSearchParams(value === "history" ? { aba: "historico" } : {})
+          setSearchParams(
+            value === "history"
+              ? { aba: "historico" }
+              : value === "lineup"
+                ? { aba: "escalacao" }
+                : {},
+          )
         }
       >
         <TabsList variant="line">
@@ -171,6 +181,10 @@ export function ClubDetailPage() {
             <span className="tabular-nums text-muted-foreground">
               {squadSize}
             </span>
+          </TabsTrigger>
+          <TabsTrigger value="lineup">
+            <ClipboardList aria-hidden />
+            Escalação
           </TabsTrigger>
           <TabsTrigger value="history">
             <History aria-hidden />
@@ -196,6 +210,10 @@ export function ClubDetailPage() {
           />
         </TabsContent>
 
+        <TabsContent value="lineup" className="mt-2">
+          <LineupPanel club={club} />
+        </TabsContent>
+
         <TabsContent value="history" className="mt-2">
           <TransactionsPanel clubId={club.id} />
         </TabsContent>
@@ -205,6 +223,7 @@ export function ClubDetailPage() {
         Valor de mercado, dias restantes e % de multa são calculados para uma
         venda agora. A multa tem teto de 10,00.
       </p>
+
       {selling && (
         <SellPlayerDialog
           player={selling}
