@@ -126,116 +126,122 @@ export function TransactionsPanel({ clubId }: { clubId: number }) {
   const page = data?.page ?? null;
 
   return (
-    <section className="rounded-xl border bg-card">
-      <div className="flex flex-wrap items-start justify-between gap-3 p-4">
-        <div>
-          <h2 className="font-semibold">Histórico de transações</h2>
-          <p className="text-sm text-muted-foreground">
-            Da mais recente para a mais antiga, com o nome e os valores do
-            momento de cada operação.
-          </p>
+    <>
+      <section className="overflow-hidden rounded-xl border bg-card">
+        <div className="flex flex-wrap items-start justify-between gap-3 p-4">
+          <div>
+            <h2 className="font-semibold">Histórico de transações</h2>
+            <p className="text-sm text-muted-foreground">
+              Da mais recente para a mais antiga, com o nome e os valores do
+              momento de cada operação.
+            </p>
+          </div>
+          <Button variant="outline" disabled={exporting} onClick={exportCsv}>
+            <Download aria-hidden />
+            Exportar CSV
+          </Button>
         </div>
-        <Button variant="outline" disabled={exporting} onClick={exportCsv}>
-          <Download aria-hidden />
-          Exportar CSV
-        </Button>
-      </div>
 
-      <div className="flex flex-wrap items-center gap-2 px-4 pb-4">
-        <span className="text-sm text-muted-foreground">Tipo</span>
-        {ALL_TYPES.map((type) => {
-          const checked = types.includes(type);
+        <div className="flex flex-wrap items-center gap-2 px-4 pb-4">
+          <span className="text-sm text-muted-foreground">Tipo</span>
+          {ALL_TYPES.map((type) => {
+            const checked = types.includes(type);
 
-          return (
-            <button
-              key={type}
-              type="button"
-              role="checkbox"
-              aria-checked={checked}
-              onClick={() => toggleType(type)}
-              className={cn(
-                "flex h-9 items-center gap-2 rounded-md border px-3 text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-                checked
-                  ? "border-primary bg-primary-soft text-primary"
-                  : "border-input bg-background",
-              )}
-            >
-              <span
-                aria-hidden
+            return (
+              <button
+                key={type}
+                type="button"
+                role="checkbox"
+                aria-checked={checked}
+                onClick={() => toggleType(type)}
                 className={cn(
-                  "flex size-4 items-center justify-center rounded-sm border text-[10px] text-primary-foreground",
-                  checked ? "border-primary bg-primary" : "border-input",
+                  "flex h-9 items-center gap-2 rounded-md border px-3 text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+                  checked
+                    ? "border-primary bg-primary-soft text-primary"
+                    : "border-input bg-background",
                 )}
               >
-                {checked && "✓"}
-              </span>
-              {TYPE_LABELS[type]}
-            </button>
-          );
-        })}
+                <span
+                  aria-hidden
+                  className={cn(
+                    "flex size-4 items-center justify-center rounded-sm border text-[10px] text-primary-foreground",
+                    checked ? "border-primary bg-primary" : "border-input",
+                  )}
+                >
+                  {checked && "✓"}
+                </span>
+                {TYPE_LABELS[type]}
+              </button>
+            );
+          })}
 
-        <Select value={player} onValueChange={setPlayer}>
-          <SelectTrigger
-            aria-label="Filtrar por jogador"
-            className="w-56 [&>[data-slot=select-value]]:mr-auto"
-          >
-            <User aria-hidden className="text-muted-foreground" />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL_PLAYERS}>Jogador: todos</SelectItem>
-            {players.map(([id, name]) => (
-              <SelectItem key={id} value={String(id)}>
-                Jogador: {name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <Select value={player} onValueChange={setPlayer}>
+            <SelectTrigger
+              aria-label="Filtrar por jogador"
+              className="w-56 [&>[data-slot=select-value]]:mr-auto"
+            >
+              <User aria-hidden className="text-muted-foreground" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_PLAYERS}>Jogador: todos</SelectItem>
+              {players.map(([id, name]) => (
+                <SelectItem key={id} value={String(id)}>
+                  Jogador: {name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        {filtered && (
-          <Button variant="link" onClick={clearFilters}>
-            Limpar filtros
-          </Button>
-        )}
-      </div>
-
-      {rejected ? (
-        <div className="border-t p-4">
-          <Alert variant="destructive">
-            <CircleAlert />
-            <AlertTitle>O filtro foi recusado</AlertTitle>
-            <AlertDescription>{rejected}</AlertDescription>
-          </Alert>
+          {filtered && (
+            <Button variant="link" onClick={clearFilters}>
+              Limpar filtros
+            </Button>
+          )}
         </div>
-      ) : (
-        <DataTable
-          columns={TRANSACTION_COLUMNS}
-          rows={page?.data ?? []}
-          getRowKey={(transaction) => transaction.id}
-          loading={loading}
-          error={error}
-          onRetry={reload}
-          emptyMessage={
-            filtered
-              ? "Nenhuma transação com esses filtros."
-              : "Nenhuma transação ainda. As compras e vendas do clube aparecem aqui."
-          }
-          emptyAction={
-            filtered ? (
-              <Button variant="outline" onClick={clearFilters}>
-                Limpar filtros
-              </Button>
-            ) : undefined
-          }
-          footer={
-            page ? <TransactionsSummaryBar summary={page.summary} /> : undefined
-          }
-        />
-      )}
 
-      <p className="border-t p-4 text-sm text-muted-foreground">
+        {rejected ? (
+          <div className="border-t p-4">
+            <Alert variant="destructive">
+              <CircleAlert />
+              <AlertTitle>O filtro foi recusado</AlertTitle>
+              <AlertDescription>{rejected}</AlertDescription>
+            </Alert>
+          </div>
+        ) : (
+          <>
+            <DataTable
+              className="rounded-none border-x-0 border-b-0"
+              columns={TRANSACTION_COLUMNS}
+              rows={page?.data ?? []}
+              getRowKey={(transaction) => transaction.id}
+              loading={loading}
+              error={error}
+              onRetry={reload}
+              emptyMessage={
+                filtered
+                  ? "Nenhuma transação com esses filtros."
+                  : "Nenhuma transação ainda. As compras e vendas do clube aparecem aqui."
+              }
+              emptyAction={
+                filtered ? (
+                  <Button variant="outline" onClick={clearFilters}>
+                    Limpar filtros
+                  </Button>
+                ) : undefined
+              }
+            />
+            {page && (
+              <div className="border-t">
+                <TransactionsSummaryBar summary={page.summary} />
+              </div>
+            )}
+          </>
+        )}
+      </section>
+      <p className="mt-4 text-sm text-muted-foreground">
         Os totais respeitam os filtros. O CSV usa os mesmos filtros da tela.
       </p>
-    </section>
+    </>
   );
 }
