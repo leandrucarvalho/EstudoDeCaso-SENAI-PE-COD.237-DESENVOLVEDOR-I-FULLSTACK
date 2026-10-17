@@ -11,6 +11,8 @@ import { PositionBadge } from "@/components/PositionBadge";
 import { formatMoney } from "@/lib/format";
 import type { Club } from "@/types/club";
 import type { Player } from "@/types/player";
+import { Button } from "./ui/button";
+import { ShoppingCart } from "lucide-react";
 
 export function buildPlayerColumns(
   clubs: Map<number, Club>,
@@ -59,9 +61,21 @@ export function buildPlayerColumns(
       header: "Ações",
       srOnlyHeader: true,
       cell: (player) => (
-        <PlayerActionsMenu player={player} onAction={onAction} />
+        <div className="flex items-center justify-end gap-2">
+          {player.club_id === null && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onAction("buy", player)}
+            >
+              <ShoppingCart aria-hidden />
+              Comprar
+            </Button>
+          )}
+          <PlayerActionsMenu player={player} onAction={onAction} />
+        </div>
       ),
-      className: "w-12 text-right",
+      className: "text-right",
     },
   ];
 }

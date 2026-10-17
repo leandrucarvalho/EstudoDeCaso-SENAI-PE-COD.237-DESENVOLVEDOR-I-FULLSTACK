@@ -26,6 +26,7 @@ import {
 import { listClubs } from "@/services/clubs";
 import { listPlayers } from "@/services/players";
 import type { Player } from "@/types/player";
+import { BuyPlayerDialog } from "@/components/BuyPlayerDialog";
 
 interface PlayerDialog {
   action: PlayerAction;
@@ -71,7 +72,7 @@ export function PlayersPage() {
   const { data: counts, reload: reloadCounts } = usePlayerCounts(countFilters);
 
   // `listClubs` é uma função do módulo (referência estável).
-  const { data: clubs } = useAsync(listClubs);
+  const { data: clubs, reload: reloadClubs } = useAsync(listClubs);
   const clubsById = useMemo(
     () => new Map((clubs ?? []).map((item) => [item.id, item] as const)),
     [clubs],
@@ -100,6 +101,11 @@ export function PlayersPage() {
   }
 
   const filtered = hasActiveFilters(view);
+
+  function refreshAfterBuy() {
+    refresh();
+    reloadClubs();
+  }
 
   return (
     <>
@@ -206,6 +212,15 @@ export function PlayersPage() {
           player={dialog.player}
           onClose={() => setDialog(null)}
           onDeleted={refresh}
+        />
+      )}
+
+      {dialog?.action === "buy" && (
+        <BuyPlayerDialog
+          player={dialog.player}
+          clubs={clubs ?? []}
+          onClose={() => setDialog(null)}
+          onBought={refreshAfterBuy}
         />
       )}
     </>

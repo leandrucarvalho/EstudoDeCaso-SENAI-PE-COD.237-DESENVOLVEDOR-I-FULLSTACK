@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { Player } from "@/types/player";
 
-export type PlayerAction = "details" | "edit" | "condition" | "delete";
+export type PlayerAction = "details" | "edit" | "condition" | "delete" | "buy";
 
 interface PlayerActionsMenuProps {
   player: Player;
