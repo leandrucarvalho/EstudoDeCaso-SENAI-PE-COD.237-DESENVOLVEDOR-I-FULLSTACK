@@ -12,10 +12,42 @@ services:
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mercado} -d ${POSTGRES_DB:-mercado}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-mercado} -d ${POSTGRES_DB:-mercado}",
+        ]
       interval: 5s
       timeout: 3s
       retries: 10
+
+  api:
+    build: ./backend
+    container_name: mercado-jogadores-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 3000
+      # Dentro da rede do Compose o banco é o serviço `db`, na porta 5432.
+      DATABASE_URL: postgresql://${POSTGRES_USER:-mercado}:${POSTGRES_PASSWORD:-mercado}@db:5432/${POSTGRES_DB:-mercado}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
+    ports:
+      - "${API_PORT:-3000}:3000"
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        # O navegador chama a API pelo endereço publicado no host.
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000/api/v1}
+    container_name: mercado-jogadores-web
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "${WEB_PORT:-5173}:80"
 
 volumes:
   db-data:
