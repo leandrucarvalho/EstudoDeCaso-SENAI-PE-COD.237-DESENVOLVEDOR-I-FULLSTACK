@@ -5,12 +5,13 @@ import {
   SearchX,
   Shirt,
   Wallet,
+  ShoppingCart,
 } from "lucide-react";
-import { useCallback } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ClubAvatar } from "@/components/ClubAvatar";
 import { DataTable } from "@/components/DataTable";
-import { SQUAD_COLUMNS } from "@/components/squad-table-columns";
+import { buildSquadColumns } from "@/components/squad-table-columns";
 import { StatCard } from "@/components/StatCard";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +22,8 @@ import { useAsync } from "@/hooks/useAsync";
 import { formatMoney } from "@/lib/format";
 import { ApiError } from "@/lib/http";
 import { getClub } from "@/services/clubs";
+import { SellPlayerDialog } from "@/components/SellPlayerDialog";
+import type { SquadPlayer } from "@/types/club";
 
 // Limite do elenco (RN12), só para mostrar "6 de 12"; quem recusa o 13º é a API.
 const MAX_SQUAD_SIZE = 12;
@@ -61,6 +64,8 @@ export function ClubDetailPage() {
     }
   }, [id, validId]);
   const { data: club, error, loading, reload } = useAsync(fetchClub);
+  const [selling, setSelling] = useState<SquadPlayer | null>(null);
+  const columns = useMemo(() => buildSquadColumns(setSelling), []);
 
   if (loading) {
     return (
@@ -98,7 +103,7 @@ export function ClubDetailPage() {
     <>
       <header className="mb-6 flex items-center gap-4">
         <ClubAvatar acronym={club.acronym} className="size-14 text-sm" />
-        <div>
+        <div className="mr-auto">
           <h1 className="text-2xl font-semibold tracking-tight">{club.name}</h1>
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <Badge variant="outline">Sigla {club.acronym}</Badge>
@@ -108,6 +113,12 @@ export function ClubDetailPage() {
             </Badge>
           </div>
         </div>
+        <Button asChild>
+          <Link to="/jogadores">
+            <ShoppingCart aria-hidden />
+            Comprar jogadores
+          </Link>
+        </Button>
       </header>
 
       <section
@@ -156,7 +167,7 @@ export function ClubDetailPage() {
 
         <TabsContent value="squad" className="mt-2">
           <DataTable
-            columns={SQUAD_COLUMNS}
+            columns={columns}
             rows={club.players}
             getRowKey={(player) => player.id}
             toolbar={
@@ -177,6 +188,14 @@ export function ClubDetailPage() {
         Valor de mercado, dias restantes e % de multa são calculados para uma
         venda agora. A multa tem teto de 10,00.
       </p>
+      {selling && (
+        <SellPlayerDialog
+          player={selling}
+          club={club}
+          onClose={() => setSelling(null)}
+          onSold={reload}
+        />
+      )}
     </>
   );
 }
