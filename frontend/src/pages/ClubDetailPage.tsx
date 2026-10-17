@@ -6,9 +6,10 @@ import {
   Shirt,
   Wallet,
   ShoppingCart,
+  History,
 } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { ClubAvatar } from "@/components/ClubAvatar";
 import { DataTable } from "@/components/DataTable";
 import { buildSquadColumns } from "@/components/squad-table-columns";
@@ -24,6 +25,7 @@ import { ApiError } from "@/lib/http";
 import { getClub } from "@/services/clubs";
 import { SellPlayerDialog } from "@/components/SellPlayerDialog";
 import type { SquadPlayer } from "@/types/club";
+import { TransactionsPanel } from "@/components/TransactionsPanel";
 
 // Limite do elenco (RN12), só para mostrar "6 de 12"; quem recusa o 13º é a API.
 const MAX_SQUAD_SIZE = 12;
@@ -66,6 +68,8 @@ export function ClubDetailPage() {
   const { data: club, error, loading, reload } = useAsync(fetchClub);
   const [selling, setSelling] = useState<SquadPlayer | null>(null);
   const columns = useMemo(() => buildSquadColumns(setSelling), []);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = searchParams.get("aba") === "historico" ? "history" : "squad";
 
   if (loading) {
     return (
@@ -154,7 +158,12 @@ export function ClubDetailPage() {
         />
       </section>
 
-      <Tabs defaultValue="squad">
+      <Tabs
+        value={tab}
+        onValueChange={(value) =>
+          setSearchParams(value === "history" ? { aba: "historico" } : {})
+        }
+      >
         <TabsList variant="line">
           <TabsTrigger value="squad">
             <Shirt aria-hidden />
@@ -162,6 +171,10 @@ export function ClubDetailPage() {
             <span className="tabular-nums text-muted-foreground">
               {squadSize}
             </span>
+          </TabsTrigger>
+          <TabsTrigger value="history">
+            <History aria-hidden />
+            Histórico
           </TabsTrigger>
         </TabsList>
 
@@ -181,6 +194,10 @@ export function ClubDetailPage() {
             }
             emptyMessage="Este clube ainda não tem jogadores."
           />
+        </TabsContent>
+
+        <TabsContent value="history" className="mt-2">
+          <TransactionsPanel clubId={club.id} />
         </TabsContent>
       </Tabs>
 
