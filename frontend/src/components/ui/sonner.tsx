@@ -1,13 +1,12 @@
-import { useTheme } from "next-themes"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme()
-
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
+      // O app só tem tema claro: sem isto o Sonner segue o modo escuro do sistema e o
+      // texto da descrição fica quase invisível sobre o fundo branco do toast.
+      theme="light"
       className="toaster group"
       position="bottom-right"
       closeButton
