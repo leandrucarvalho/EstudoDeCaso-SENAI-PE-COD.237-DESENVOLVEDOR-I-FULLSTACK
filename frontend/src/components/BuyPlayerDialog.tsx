@@ -72,6 +72,9 @@ export function BuyPlayerDialog({
   const errors = useMemo(() => validateLoyalty(loyalty), [loyalty]);
   const hasErrors = Object.keys(errors).length > 0;
 
+  const shownError =
+    submitted || loyalty.date !== "" ? (errors.date ?? errors.time) : undefined;
+
   function close() {
     if (submitting) return;
     if (result) onBought();
@@ -243,7 +246,7 @@ export function BuyPlayerDialog({
           <FormField
             id="buy-date"
             label="Fim da fidelidade"
-            error={submitted || loyalty.date !== "" ? errors.date : undefined}
+            error={shownError}
             hint="Depois do momento da compra e até 1.095 dias. Horário de Brasília; enviado com o fuso (-03:00)."
           >
             <div className="grid gap-3 sm:grid-cols-[1fr_9rem]">
@@ -278,6 +281,7 @@ export function BuyPlayerDialog({
                   aria-label="Horário do fim da fidelidade"
                   value={loyalty.time}
                   aria-invalid={Boolean(errors.time)}
+                  aria-describedby="buy-date-message"
                   className="h-9 pl-9"
                   onChange={(event) =>
                     setLoyalty((current) => ({
