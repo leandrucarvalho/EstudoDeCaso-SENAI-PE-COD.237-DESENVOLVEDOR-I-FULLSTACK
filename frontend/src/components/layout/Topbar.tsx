@@ -9,6 +9,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Separator } from '@/components/ui/separator';
+import { useCrumbLabel } from '@/lib/crumb-label';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 
 interface Crumb {
@@ -16,7 +17,7 @@ interface Crumb {
   to?: string;
 }
 
-function buildCrumbs(pathname: string): Crumb[] {
+function buildCrumbs(pathname: string, label: string | null): Crumb[] {
   const [section, id] = pathname.split('/').filter(Boolean);
 
   switch (section) {
@@ -27,7 +28,7 @@ function buildCrumbs(pathname: string): Crumb[] {
         ? [
             { label: 'Mercado' },
             { label: 'Clubes', to: '/clubes' },
-            { label: `Clube ${id}` },
+            { label: label ?? `Clube ${id}` },
           ]
         : [{ label: 'Mercado' }, { label: 'Clubes' }];
     case 'partidas':
@@ -35,7 +36,7 @@ function buildCrumbs(pathname: string): Crumb[] {
         ? [
             { label: 'Liga' },
             { label: 'Partidas', to: '/partidas' },
-            { label: `Partida ${id}` },
+            { label: label ?? `Partida ${id}` },
           ]
         : [{ label: 'Liga' }, { label: 'Partidas' }];
     case 'classificacao':
@@ -47,7 +48,7 @@ function buildCrumbs(pathname: string): Crumb[] {
 
 export function Topbar() {
   const { pathname } = useLocation();
-  const crumbs = buildCrumbs(pathname);
+  const crumbs = buildCrumbs(pathname, useCrumbLabel());
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">

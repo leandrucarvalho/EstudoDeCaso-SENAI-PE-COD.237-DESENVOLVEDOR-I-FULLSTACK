@@ -26,6 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAsync } from "@/hooks/useAsync";
 import { formatMoney } from "@/lib/format";
+import { useSetCrumbLabel } from "@/lib/crumb-label";
 import { ApiError } from "@/lib/http";
 import { getClub } from "@/services/clubs";
 import { listTransactions } from "@/services/market";
@@ -70,6 +71,7 @@ export function ClubDetailPage() {
     }
   }, [id, validId]);
   const { data: club, error, loading, reload } = useAsync(fetchClub);
+  useSetCrumbLabel(club?.name);
   const [searchParams, setSearchParams] = useSearchParams();
   const aba = searchParams.get("aba");
   const tab =

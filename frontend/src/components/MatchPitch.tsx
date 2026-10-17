@@ -75,8 +75,22 @@ export function MatchPitch({ match }: { match: Match }) {
   const away = columnsOf(match, "away").reverse();
 
   return (
-    <div className="relative overflow-x-auto rounded-xl bg-[#14532d]">
+    <div
+      style={{
+        backgroundImage:
+          "repeating-linear-gradient(to right, #14532d 0 6.25%, #0f4a28 6.25% 12.5%)",
+      }}
+      className="relative overflow-x-auto rounded-xl"
+    >
       <div className="relative flex min-w-[56rem] items-stretch justify-between gap-2 px-4 py-12">
+        <div
+          aria-hidden
+          className="absolute inset-y-[22%] left-0 w-[11%] border border-l-0 border-white/30"
+        />
+        <div
+          aria-hidden
+          className="absolute inset-y-[22%] right-0 w-[11%] border border-r-0 border-white/30"
+        />
         <div
           aria-hidden
           className="absolute inset-y-0 left-1/2 w-px bg-white/30"

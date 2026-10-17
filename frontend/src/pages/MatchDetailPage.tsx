@@ -1,4 +1,4 @@
-import { ArrowLeft, SearchX } from "lucide-react";
+import { ArrowLeft, HeartPulse, SearchX, Volleyball } from "lucide-react";
 import { useCallback, useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 import { DuelsTable } from "@/components/DuelsTable";
@@ -8,6 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAsync } from "@/hooks/useAsync";
+import { useSetCrumbLabel } from "@/lib/crumb-label";
 import { ApiError } from "@/lib/http";
 import { listClubs } from "@/services/clubs";
 import { getMatch } from "@/services/league";
@@ -41,6 +42,10 @@ export function MatchDetailPage() {
   const { data: match, error, loading, reload } = useAsync(fetchMatch);
   // `listClubs` é uma função do módulo (referência estável).
   const { data: clubs } = useAsync(listClubs);
+  useSetCrumbLabel(
+    match &&
+      `${match.home.club_name} ${match.home.goals} × ${match.away.goals} ${match.away.club_name}`,
+  );
   const acronyms = useMemo(
     () => new Map((clubs ?? []).map((item) => [item.id, item.acronym])),
     [clubs],
@@ -99,12 +104,24 @@ export function MatchDetailPage() {
       </section>
 
       <section className="rounded-xl border bg-card">
-        <header className="p-4">
-          <h2 className="font-semibold">Em campo</h2>
-          <p className="text-sm text-muted-foreground">
-            Titulares de cada clube na formação da partida e os valores usados
-            nos duelos, já com o efeito da condição.
-          </p>
+        <header className="flex flex-wrap items-start justify-between gap-3 p-4">
+          <div>
+            <h2 className="font-semibold">Em campo</h2>
+            <p className="text-sm text-muted-foreground">
+              Titulares de cada clube na formação da partida e os valores usados
+              nos duelos, já com o efeito da condição.
+            </p>
+          </div>
+          <ul className="flex items-center gap-4 text-sm text-muted-foreground">
+            <li className="flex items-center gap-1.5">
+              <HeartPulse aria-hidden className="size-4 text-amber-600" />
+              Mal condicionado
+            </li>
+            <li className="flex items-center gap-1.5">
+              <Volleyball aria-hidden className="size-4" />
+              Gol no duelo
+            </li>
+          </ul>
         </header>
         <div className="p-4 pt-0">
           <MatchPitch match={match} />
