@@ -29,6 +29,10 @@ interface DataTableProps<T> {
   loading?: boolean;
   error?: string | null;
   onRetry?: () => void;
+  /** Título do alerta de erro; o texto vem da API. */
+  errorTitle?: string;
+  /** Título da lista vazia; `emptyMessage` é a explicação logo abaixo. */
+  emptyTitle?: string;
   emptyMessage: string;
   emptyAction?: ReactNode;
   toolbar?: ReactNode;
@@ -45,6 +49,8 @@ export function DataTable<T>({
   loading = false,
   error = null,
   onRetry,
+  errorTitle = "Não foi possível carregar",
+  emptyTitle,
   emptyMessage,
   emptyAction,
   toolbar,
@@ -52,15 +58,26 @@ export function DataTable<T>({
 }: DataTableProps<T>) {
   function renderBody() {
     if (loading) {
-      return Array.from({ length: SKELETON_ROWS }, (_, index) => (
-        <TableRow key={index}>
-          {columns.map((column) => (
-            <TableCell key={column.header}>
-              <Skeleton className="h-4 w-full" />
-            </TableCell>
+      return (
+        <>
+          {Array.from({ length: SKELETON_ROWS }, (_, index) => (
+            <TableRow key={index}>
+              {columns.map((column) => (
+                <TableCell key={column.header}>
+                  <Skeleton className="h-4 w-full" />
+                </TableCell>
+              ))}
+            </TableRow>
           ))}
-        </TableRow>
-      ));
+          <TableRow>
+            <TableCell colSpan={columns.length}>
+              <p role="status" className="text-sm text-muted-foreground">
+                Carregando...
+              </p>
+            </TableCell>
+          </TableRow>
+        </>
+      );
     }
 
     if (error) {
@@ -69,7 +86,7 @@ export function DataTable<T>({
           <TableCell colSpan={columns.length}>
             <Alert variant="destructive">
               <AlertCircle />
-              <AlertTitle>Não foi possível carregar</AlertTitle>
+              <AlertTitle>{errorTitle}</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
             {onRetry && (
@@ -89,6 +106,9 @@ export function DataTable<T>({
             colSpan={columns.length}
             className="py-10 text-center text-muted-foreground"
           >
+            {emptyTitle && (
+              <p className="font-medium text-foreground">{emptyTitle}</p>
+            )}
             <p>{emptyMessage}</p>
             {emptyAction && <div className="mt-3">{emptyAction}</div>}
           </TableCell>
