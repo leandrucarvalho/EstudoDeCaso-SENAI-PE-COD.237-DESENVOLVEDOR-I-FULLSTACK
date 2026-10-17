@@ -1,4 +1,3 @@
-import { TriangleAlert } from "lucide-react";
 import { useCallback, useState } from "react";
 import { LineupEditor } from "@/components/LineupEditor";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -39,21 +38,6 @@ export function LineupPanel({ club }: { club: ClubDetail }) {
 
   return (
     <div className="grid gap-4">
-      {!lineup.complete && (
-        <Alert variant="warning">
-          <TriangleAlert />
-          <AlertTitle>
-            Escalação incompleta: o {club.name} não pode jogar partidas
-          </AlertTitle>
-          <AlertDescription>
-            O elenco tem {club.players.length}{" "}
-            {club.players.length === 1 ? "jogador" : "jogadores"}, e a escalação
-            precisa de 5: 1 goleiro e 4 jogadores de linha. Compre jogadores e
-            salve a escalação com os 5 titulares.
-          </AlertDescription>
-        </Alert>
-      )}
-
       <LineupEditor
         key={draftVersion}
         club={club}

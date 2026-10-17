@@ -1,8 +1,9 @@
-import { Check, CircleAlert, Lock, TriangleAlert } from "lucide-react";
+import { Check, CircleAlert, Lock, Swords, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ConditionBadge } from "@/components/ConditionBadge";
-import { Pitch, type PitchPlayer } from "@/components/Pitch";
+import { FormationDiagram } from "@/components/FormationDiagram";
+import { Pitch, type PitchSpot } from "@/components/Pitch";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -133,13 +134,24 @@ export function LineupEditor({
     }
   }
 
-  const pitchRows: PitchPlayer[][] = PITCH_ORDER.map((sector) =>
-    slots
-      .map((slot, index) =>
-        slot.sector === sector ? byId.get(ids[index]) : undefined,
-      )
-      .filter((player): player is SquadPlayer => player !== undefined),
-  ).filter((row) => row.length > 0);
+  // Todas as vagas aparecem no campo; a vazia fica tracejada.
+  const pitchRows: PitchSpot[][] = PITCH_ORDER.map((sector) =>
+    slots.flatMap((slot, index): PitchSpot[] => {
+      if (slot.sector !== sector) return [];
+      const player = byId.get(ids[index]);
+      return [
+        {
+          id: index,
+          label: slot.title,
+          player: player && {
+            name: player.name,
+            poorCondition: player.condition === "MAL_CONDICIONADO",
+          },
+        },
+      ];
+    }),
+  );
+  const sick = club.players.filter((player) => player.condition === "DOENTE");
 
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_20rem]">
@@ -171,6 +183,24 @@ export function LineupEditor({
           )}
         </header>
 
+        {!lineup.complete && (
+          <div className="p-4 pb-0">
+            <Alert variant="warning">
+              <TriangleAlert />
+              <AlertTitle>
+                Escalação incompleta: o {club.name} não pode jogar partidas
+              </AlertTitle>
+              <AlertDescription>
+                {lineup.formation && lineup.players.length > 0
+                  ? `A formação ${lineup.formation} continua salva, com ${lineup.players.length} ${lineup.players.length === 1 ? "titular" : "titulares"}. Escolha os que faltam e salve de novo.`
+                  : `O elenco tem ${club.players.length} ${club.players.length === 1 ? "jogador" : "jogadores"}, e a escalação precisa de 5: 1 goleiro e 4 jogadores de linha. Compre jogadores e salve a escalação com os 5 titulares.`}
+                {sick.length > 0 &&
+                  ` ${joinNames(sick.map((player) => player.name))} ${sick.length > 1 ? "estão" : "está"} DOENTE: doente não pode ser escalado.`}
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
+
         <div className="p-4">
           <h3 className="font-medium">Formação</h3>
           <p className="mb-3 text-sm text-muted-foreground">
@@ -200,27 +230,30 @@ export function LineupEditor({
                       : "border-input hover:bg-muted",
                   )}
                 >
-                  <span
-                    aria-hidden
-                    className={cn(
-                      "mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border",
-                      selected ? "border-primary" : "border-input",
-                    )}
-                  >
-                    {selected && (
-                      <span className="size-2 rounded-full bg-primary" />
-                    )}
-                  </span>
+                  <FormationDiagram formation={option} />
                   <span>
-                    <span
-                      className={cn(
-                        "block font-semibold",
-                        selected && "text-primary",
-                      )}
-                    >
-                      {option}
+                    <span className="flex items-center gap-2">
+                      <span
+                        aria-hidden
+                        className={cn(
+                          "flex size-4 shrink-0 items-center justify-center rounded-full border",
+                          selected ? "border-primary" : "border-input",
+                        )}
+                      >
+                        {selected && (
+                          <span className="size-2 rounded-full bg-primary" />
+                        )}
+                      </span>
+                      <span
+                        className={cn(
+                          "font-semibold",
+                          selected && "text-primary",
+                        )}
+                      >
+                        {option}
+                      </span>
                     </span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="mt-1 block text-xs text-muted-foreground">
                       {FORMATION_DESCRIPTIONS[option]}
                     </span>
                   </span>
@@ -263,7 +296,13 @@ export function LineupEditor({
                         aria-label={`Titular da vaga ${index + 1}: ${slot.title}`}
                         className="w-60"
                       >
-                        <SelectValue placeholder={`Sem ${slot.hint}`} />
+                        <SelectValue
+                          placeholder={
+                            options.length > 0
+                              ? "Escolha o titular"
+                              : `Sem ${slot.hint}`
+                          }
+                        />
                       </SelectTrigger>
                       <SelectContent>
                         {options.map((option) => (
@@ -341,19 +380,25 @@ export function LineupEditor({
           <header className="border-b p-4">
             <h2 className="font-semibold">Em campo</h2>
             <p className="text-sm text-muted-foreground">
-              Prévia da formação {formation}, com as vagas já preenchidas.
+              Prévia da formação {formation}; a vaga vazia fica tracejada.
             </p>
           </header>
           <div className="p-4">
             <Pitch rows={pitchRows} />
           </div>
+          <p className="flex items-start gap-2 border-t bg-muted-subtle p-4 text-xs text-muted-foreground">
+            <Swords aria-hidden className="mt-0.5 size-4 shrink-0" />
+            Na partida, atacam os 3 jogadores de linha mais avançados e defendem
+            o goleiro e os 2 mais recuados. É gol quando o ataque é maior que a
+            defesa.
+          </p>
         </section>
 
         <section className="rounded-xl border bg-card">
           <header className="border-b p-4">
             <h2 className="font-semibold">Reservas</h2>
             <p className="text-sm text-muted-foreground">
-              Jogadores do elenco fora dos titulares.
+              Jogadores do elenco fora da escalação.
             </p>
           </header>
           <ul className="divide-y">
@@ -377,7 +422,7 @@ export function LineupEditor({
                 {player.condition === "DOENTE" && (
                   <p className="flex items-center gap-2 rounded-md border bg-muted-subtle px-3 py-2 text-xs text-muted-foreground">
                     <Lock aria-hidden className="size-3.5" />
-                    Doente não pode ser titular.
+                    Doente não pode ser escalado.
                   </p>
                 )}
               </li>
@@ -385,6 +430,11 @@ export function LineupEditor({
           </ul>
         </section>
       </div>
+
+      <p className="text-sm text-muted-foreground lg:col-span-2">
+        O titular vendido ou que fica DOENTE sai da escalação e não volta
+        sozinho: escale de novo e salve (RN19).
+      </p>
     </div>
   );
 }

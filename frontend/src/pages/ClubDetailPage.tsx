@@ -17,6 +17,7 @@ import { SellPlayerDialog } from "@/components/SellPlayerDialog";
 import { buildSquadColumns } from "@/components/squad-table-columns";
 import { LineupPanel } from "@/components/LineupPanel";
 import { StatCard } from "@/components/StatCard";
+import { TabCount } from "@/components/TabCount";
 import { TransactionsPanel } from "@/components/TransactionsPanel";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +28,7 @@ import { useAsync } from "@/hooks/useAsync";
 import { formatMoney } from "@/lib/format";
 import { ApiError } from "@/lib/http";
 import { getClub } from "@/services/clubs";
+import { listTransactions } from "@/services/market";
 import type { SquadPlayer } from "@/types/club";
 
 // Limite do elenco (RN12), só para mostrar "6 de 12"; quem recusa o 13º é a API.
@@ -72,6 +74,14 @@ export function ClubDetailPage() {
   const aba = searchParams.get("aba");
   const tab =
     aba === "historico" ? "history" : aba === "escalacao" ? "lineup" : "squad";
+  // Contador da aba Histórico; a venda recarrega o contador junto com o clube.
+  const fetchTransactionCount = useCallback(async () => {
+    if (!validId) return null;
+    return (await listTransactions(id)).data.length;
+  }, [id, validId]);
+  const { data: transactionCount, reload: reloadTransactionCount } = useAsync(
+    fetchTransactionCount,
+  );
   const [selling, setSelling] = useState<SquadPlayer | null>(null);
   const columns = useMemo(() => buildSquadColumns(setSelling), []);
 
@@ -178,9 +188,7 @@ export function ClubDetailPage() {
           <TabsTrigger value="squad">
             <Shirt aria-hidden />
             Elenco
-            <span className="tabular-nums text-muted-foreground">
-              {squadSize}
-            </span>
+            <TabCount value={squadSize} />
           </TabsTrigger>
           <TabsTrigger value="lineup">
             <ClipboardList aria-hidden />
@@ -189,6 +197,7 @@ export function ClubDetailPage() {
           <TabsTrigger value="history">
             <History aria-hidden />
             Histórico
+            {transactionCount != null && <TabCount value={transactionCount} />}
           </TabsTrigger>
         </TabsList>
 
@@ -208,6 +217,10 @@ export function ClubDetailPage() {
             }
             emptyMessage="Este clube ainda não tem jogadores."
           />
+          <p className="mt-4 text-sm text-muted-foreground">
+            Valor de mercado, dias restantes e % de multa são calculados para
+            uma venda agora. A multa tem teto de 10,00.
+          </p>
         </TabsContent>
 
         <TabsContent value="lineup" className="mt-2">
@@ -219,17 +232,15 @@ export function ClubDetailPage() {
         </TabsContent>
       </Tabs>
 
-      <p className="mt-4 text-sm text-muted-foreground">
-        Valor de mercado, dias restantes e % de multa são calculados para uma
-        venda agora. A multa tem teto de 10,00.
-      </p>
-
       {selling && (
         <SellPlayerDialog
           player={selling}
           club={club}
           onClose={() => setSelling(null)}
-          onSold={reload}
+          onSold={() => {
+            reload();
+            reloadTransactionCount();
+          }}
         />
       )}
     </>

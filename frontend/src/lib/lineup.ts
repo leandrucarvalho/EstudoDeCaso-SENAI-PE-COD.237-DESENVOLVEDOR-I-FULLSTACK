@@ -43,6 +43,12 @@ const SHAPES: Record<Formation, [number, number, number]> = {
   "1-2-1": [1, 2, 1],
 };
 
+/** Jogadores por linha, do goleiro ao ataque (ex.: "2-1-1" vira [1, 2, 1, 1]). */
+export function formationRows(formation: Formation): number[] {
+  const [defense, midfield, attack] = SHAPES[formation];
+  return [1, defense, midfield, attack].filter((count) => count > 0);
+}
+
 export function slotsFor(formation: Formation): Slot[] {
   const [defense, midfield, attack] = SHAPES[formation];
   const sectors: Sector[] = [
