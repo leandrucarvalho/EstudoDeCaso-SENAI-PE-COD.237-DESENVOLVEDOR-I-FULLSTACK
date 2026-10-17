@@ -37,6 +37,13 @@ export function formatSignedMoney(value: Maybe<number>): string {
   return `${value > 0 ? "+" : MINUS}${text}`;
 }
 
+export function formatSignedInteger(value: Maybe<number>): string {
+  if (value == null) return EMPTY;
+  if (value === 0) return "0";
+
+  return `${value > 0 ? "+" : MINUS}${integerFormatter.format(Math.abs(value))}`;
+}
+
 export function formatPercent(value: Maybe<number>): string {
   if (value == null) return EMPTY;
   return `${integerFormatter.format(value)}%`;
